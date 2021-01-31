@@ -344,7 +344,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "Snake.kicad_pro",
+    "filename": "Knout.kicad_pro",
     "version": 1
   },
   "net_settings": {
@@ -388,7 +388,6 @@
           "/RF3",
           "GND",
           "PwrMCU",
-          "PwrUnst",
           "VCC"
         ],
         "pcb_color": "rgba(0, 0, 0, 0.000)",
@@ -446,7 +445,7 @@
   },
   "sheets": [
     [
-      "d78d81bd-95ec-42e9-8833-5bdfd830f2f2",
+      "682a22d3-75dd-4c6b-baf4-53c37268619e",
       ""
     ]
   ],
