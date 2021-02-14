@@ -3,3 +3,7 @@ Knout/Knout_hw/Knout-backups/
 *.dsn
 *.ses
 Snake/Snake_fw/Release/
+*.xml
+Knout/Knout_fw/Debug/
+Knout/Knout_fw/Release/
+Knout/Knout_hw/Factory/Knout.pdf

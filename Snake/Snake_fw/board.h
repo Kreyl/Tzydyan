@@ -33,33 +33,26 @@
 
 // Buttons
 #define BTN1_PIN        GPIOA, 0
-
-// Vibro
-#define VIBRO_CTRL      { GPIOA, 3, TIM15, 2, invNotInverted, omPushPull, 99 }
-
-// IR TX
-#define IR_LVL_PIN      GPIOA, 4
-#define IR_CARRIER_PIN  GPIOB, 2
+#define BTN2_PIN        GPIOA, 1
 
 // Battery
 #define IS_CHARGING     GPIOA, 2, pudPullUp
-#define BAT_MEAS_EN     GPIOA, 5
+#define BAT_MEAS_EN     GPIOB, 0
 #define BAT_ADC_PIN     GPIOB, 1
 
 // Light
-#define LUMOS_CTRL      { GPIOA, 6, TIM16, 1, invNotInverted, omPushPull, 255 }
-#define LED_B_PIN       { GPIOA, 8, TIM1, 1, invNotInverted, omPushPull, 255 }
-#define LED_R_PIN       { GPIOA, 9, TIM1, 2, invNotInverted, omPushPull, 255 }
-#define LED_G_PIN       { GPIOA, 10, TIM1, 3, invNotInverted, omPushPull, 255 }
+#define LED_B_PIN       { GPIOA, 8,  TIM1, 1, invInverted, omPushPull, 255 }
+#define LED_G_PIN       { GPIOA, 9,  TIM1, 2, invInverted, omPushPull, 255 }
+#define LED_R_PIN       { GPIOA, 10, TIM1, 3, invInverted, omPushPull, 255 }
 
 // USB
 #define USB_DM          GPIOA, 11
 #define USB_DP          GPIOA, 12
 #define USB_AF          AF10
-#define USB_DETECT_PIN  GPIOA, 7
+#define USB_DETECT_PIN  GPIOC, 15
 
 // Radio: SPI, PGpio, Sck, Miso, Mosi, Cs, Gdo0
-#define CC_Setup0       SPI1, GPIOB, 3,4,5, GPIOA,15, GPIOB,0
+#define CC_Setup0       SPI1, GPIOA, 5,6,7, GPIOA,15, GPIOA,4
 
 // UART
 #define UART_GPIO       GPIOB
@@ -75,26 +68,7 @@
 #define ACG_PWR_PIN     GPIOB, 11
 #define ACG_SPI         SPI2
 
-// I2C
-#define I2C1_GPIO       GPIOB
-#define I2C1_SCL        8
-#define I2C1_SDA        9
-// I2C Alternate Function
-#define I2C_AF          AF4
-
-#define EE_PWR_PIN      GPIOB, 10
-
 #endif // GPIO
-
-#if 1 // ============================== Timer ==================================
-#define IR_SAMPLING_TMR TIM7
-#endif
-
-#if 1 // =========================== I2C =======================================
-// i2cclkPCLK1, i2cclkSYSCLK, i2cclkHSI
-#define I2C_CLK_SRC     i2cclkHSI
-#define I2C_BAUDRATE_HZ 400000
-#endif
 
 #if ADC_REQUIRED // ======================= Inner ADC ==========================
 // Clock divider: clock is generated from the APB2
@@ -122,14 +96,6 @@
 #define ACG_DMA_TX      STM32_DMA_STREAM_ID(1, 5)
 #define ACG_DMA_RX      STM32_DMA_STREAM_ID(1, 4)
 #define ACG_DMA_CHNL    1
-
-// ==== I2C ====
-#define I2C1_DMA_TX     STM32_DMA_STREAM_ID(1, 6)
-#define I2C1_DMA_RX     STM32_DMA_STREAM_ID(1, 7)
-#define I2C1_DMA_CHNL   3
-
-#define DAC_DMA         STM32_DMA_STREAM_ID(2, 4)
-#define DAC_DMA_CHNL    3
 
 #if ADC_REQUIRED
 #define ADC_DMA         STM32_DMA1_STREAM1

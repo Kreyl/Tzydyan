@@ -6,7 +6,6 @@
 #include "vibro.h"
 #include "Sequences.h"
 #include "radio_lvl1.h"
-#include "kl_i2c.h"
 #include "kl_lib.h"
 #include "MsgQ.h"
 //#include "main.h"
@@ -21,13 +20,15 @@ CmdUart_t Uart{&CmdUartParams};
 static void ITask();
 static void OnCmd(Shell_t *PShell);
 
+// State
+enum State_t {staIdle, staBlinking, staKnoutPowered} State = staIdle;
+
 // ==== Periphery ====
-//LedRGB_t Led { LED_R_PIN, LED_G_PIN, LED_B_PIN };
+LedRGB_t Led { LED_R_PIN, LED_G_PIN, LED_B_PIN };
 
 // ==== Timers ====
 //static TmrKL_t TmrEverySecond {MS2ST(1000), evtIdEverySecond, tktPeriodic};
-//static TmrKL_t TmrRxTableCheck {MS2ST(2007), evtIdCheckRxTable, tktPeriodic};
-//static int32_t TimeS;
+static int32_t TimeS;
 #endif
 
 int main(void) {
@@ -46,23 +47,19 @@ int main(void) {
     Printf("\r%S %S\r", APP_NAME, XSTRINGIFY(BUILD_TIME));
     Clk.PrintFreqs();
 
-//    i2c1.Init();
-//    i2c1.ScanBus();
+    Led.Init();
+    Led.StartOrRestart(lsqStart);
 
-//    Led.Init();
-//    Led.StartOrRestart(lsqStart);
-
-//    SimpleSensors::Init();
+    SimpleSensors::Init();
 //    Adc.Init();
 
     // ==== Time and timers ====
 //    TmrEverySecond.StartOrRestart();
-//    TmrRxTableCheck.StartOrRestart();
 
     // ==== Radio ====
-//    if(Radio.Init() == retvOk) Led.StartOrRestart(lsqStart);
-//    else Led.StartOrRestart(lsqFailure);
-//    chThdSleepMilliseconds(1008);
+    if(Radio.Init() == retvOk) Led.StartOrRestart(lsqStart);
+    else Led.StartOrRestart(lsqFailure);
+    chThdSleepMilliseconds(1008);
 
     // Main cycle
     ITask();
@@ -73,13 +70,40 @@ void ITask() {
     while(true) {
         EvtMsg_t Msg = EvtQMain.Fetch(TIME_INFINITE);
         switch(Msg.ID) {
-//            case evtIdEverySecond:
-//                TimeS++;
+            case evtIdEverySecond:
+                TimeS++;
 //                ReadAndSetupMode();
-//                break;
+                break;
 
             case evtIdButtons:
-//                Printf("Btn %u\r", Msg.BtnEvtInfo.Type);
+                Printf("Btn %u\r", Msg.BtnEvtInfo.BtnID);
+                if(Msg.BtnEvtInfo.BtnID == 0) {
+                    if(Msg.BtnEvtInfo.Type == beShortPress and State != staKnoutPowered) {
+                        if(State == staIdle) {
+                            State = staBlinking;
+                            Led.StartOrContinue(lsqBlinking);
+                        }
+                        else {
+                            State = staIdle;
+                            Led.StartOrContinue(lsqIdle);
+                        }
+                    }
+                }
+                else if(Msg.BtnEvtInfo.BtnID == 1 and Msg.BtnEvtInfo.Type == beShortPress) {
+                    if(State == staKnoutPowered) {
+                        // Power it off
+                        State = staIdle;
+                        Radio.PktTx.Cmd = RCMD_POWER_OFF;
+                        Led.StartOrRestart(lsqIdle);
+                    }
+                    else {
+                        // Power it on
+                        State = staKnoutPowered;
+                        Radio.PktTx.Cmd = RCMD_POWER_ON;
+                        Led.StartOrRestart(lsqPowered);
+                    }
+                }
+                Printf("Sta: %u\r", State);
                 break;
 
             case evtIdShellCmd:

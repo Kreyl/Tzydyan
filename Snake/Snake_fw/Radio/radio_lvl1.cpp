@@ -12,7 +12,6 @@
 #include "vibro.h"
 
 cc1101_t CC(CC_Setup0);
-extern int32_t ID;
 
 //#define DBG_PINS
 
@@ -31,10 +30,6 @@ extern int32_t ID;
 #endif
 
 rLevel1_t Radio;
-rPkt_t Pkt;
-extern LedRGB_t Led;
-extern LedSmooth_t Lumos;
-extern Vibro_t Vibro;
 
 #if 1 // ================================ Task =================================
 static THD_WORKING_AREA(warLvl1Thread, 256);
@@ -48,27 +43,23 @@ static void rLvl1Thread(void *arg) {
 __noreturn
 void rLevel1_t::ITask() {
     while(true) {
-        CC.Recalibrate();
-        uint8_t RxRslt = CC.Receive(7, &Pkt, RPKT_LEN, &Rssi);
-        if(RxRslt == retvOk) {
-//            Printf("\rRssi=%d", Rssi);
-            // Process received
-            Led.SetColor(Color_t(Pkt.R, Pkt.G, Pkt.B));
-            Lumos.SetBrightness(Pkt.W);
-            Vibro.Set(Pkt.VibroPwr);
-
-            // Send all data in queue
-            while(TxBuf.Get(&Pkt) == retvOk) {
-                chThdSleepMilliseconds(2); // Let receiver think. Waste some ms here.
-                CC.Transmit(&Pkt, RPKT_LEN);
-            } // while
-        } // if rcvd
+        if(PktTx.Cmd == RCMD_NOTHING) chThdSleepMilliseconds(270);
+        else {
+            // Need to transmit cmd
+            PktRx.Reply = retvNoAnswer;
+            CC.Recalibrate();
+            CC.Transmit(&PktTx, RPKT_LEN);
+            // Get reply
+            if(CC.Receive(18, &PktRx, RPKT_LEN, &Rssi) == retvOk) {
+                Printf("Rpl=%u; Rssi=%d", PktRx.Reply, Rssi);
+                if(PktRx.Reply == 0) {
+                    PktTx.Cmd = RCMD_NOTHING;
+                    CC.PowerOff();
+                }
+                else chThdSleepMilliseconds(36);
+            }
+        }
     } // while true
-}
-
-void rLevel1_t::TryToSleep(uint32_t SleepDuration) {
-    if(SleepDuration >= MIN_SLEEP_DURATION_MS) CC.PowerOff();
-    chThdSleepMilliseconds(SleepDuration);
 }
 
 #if 1 // ============================
@@ -78,11 +69,10 @@ uint8_t rLevel1_t::Init() {
     PinSetupOut(DBG_GPIO2, DBG_PIN2, omPushPull);
 #endif
 
-//    RMsgQ.Init();
     if(CC.Init() == retvOk) {
         CC.SetTxPower(CC_Pwr0dBm);
         CC.SetPktSize(RPKT_LEN);
-        CC.SetChannel(ID);
+        CC.SetChannel(0);
         chThdCreateStatic(warLvl1Thread, sizeof(warLvl1Thread), HIGHPRIO, (tfunc_t)rLvl1Thread, NULL);
         return retvOk;
     }
